@@ -18,7 +18,7 @@ struct MachineCycleType
 		InterruptAck = 7,
 		HaltAck = 8,
 		InterruptAckWhileHalt = 9,
-		Internal = 10 // NOTE: Used by DAD instruction CIRCUIT_TODO: Add this to the circuit!
+		Internal = 10 // NOTE: Used by DAD instruction and the reset sequence.
 	};
 };
 
@@ -63,7 +63,7 @@ struct ALUOp
 		Sub = 4,
 		RotateLeft = 5,
 		RotateRight = 6,
-		DecimalAdjust = 7 // CIRCUIT_TODO
+		DecimalAdjust = 7
 	};
 };
 
@@ -366,68 +366,84 @@ struct NextAddressSelect
 	};
 };
 
+#pragma pack(push, 1)
 struct MicroInstruction
 {
 	// Flow control
-	// CIRCUIT_TODO: Add these to the circuit
-	uint8_t m_ConditionCode : 3;
-	uint8_t m_NextAddressSelect : 1; // 0 = continue, 1 = branch address
-	uint16_t m_BranchAddr : 12; // Max 2048 addresses in decode ROM.
+	union
+	{
+		struct
+		{
+			uint16_t m_ConditionCode : 3;
+			uint16_t m_NextAddressSelect : 1; // 0 = continue, 1 = branch address
+			uint16_t m_BranchAddr : 11; // Max 2048 addresses in decode ROM.
+		};
+		uint16_t m_FlowControlBitfield;
+	};
 
-	// State identification
-	uint8_t m_IsT1 : 1;
-	uint8_t m_IsT2 : 1;
-	uint8_t m_IsT3 : 1;
-	uint8_t m_IsLastT : 1;
-	uint8_t m_Sync : 1;
+	union
+	{
+		struct
+		{
+			// State identification
+			uint64_t m_IsT1 : 1;
+			uint64_t m_IsT2 : 1;
+			uint64_t m_IsT3 : 1;
+			uint64_t m_IsLastT : 1;
+			uint64_t m_Sync : 1;
 
-	// Machine cycle identification
-	uint8_t m_IsLastMachineCycle : 1;
-	uint8_t m_MachineCycleType : 4;
+			// Machine cycle identification
+			uint64_t m_IsLastMachineCycle : 1;
+			uint64_t m_MachineCycleType : 4;
 
-	// ALU
-	uint8_t m_ALUASrc : 1;
-	uint8_t m_ALUBSrc : 1;
-	uint8_t m_ALUCSrc : 3;
-	uint8_t m_ALUOp : 3;
+			// ALU
+			uint64_t m_ALUASrc : 1;
+			uint64_t m_ALUBSrc : 1;
+			uint64_t m_ALUCSrc : 3;
+			uint64_t m_ALUOp : 3;
 
-	// Internal registers
-	uint8_t m_ACCSrc : 1;
-	uint8_t m_ACTSrc : 1; // CIRCUIT_TODO: Add this to the circuit
-	uint8_t m_WriteEnableACC : 1;
-	uint8_t m_WriteEnableTMP : 1;
-	uint8_t m_WriteEnableACT : 1;
+			// Internal registers
+			uint64_t m_ACCSrc : 1;
+			uint64_t m_ACTSrc : 1;
+			uint64_t m_WriteEnableACC : 1;
+			uint64_t m_WriteEnableTMP : 1;
+			uint64_t m_WriteEnableACT : 1;
 
-	// Flags
-	uint8_t m_FlagsCSrc : 2;
-	uint8_t m_FlagsPSrc : 1;
-	uint8_t m_FlagsACSrc : 1;
-	uint8_t m_FlagsZSrc : 1;
-	uint8_t m_FlagsSSrc : 1;
-	uint8_t m_WriteEnableFlagsC : 1;
-	uint8_t m_WriteEnableFlagsP : 1;
-	uint8_t m_WriteEnableFlagsAC : 1;
-	uint8_t m_WriteEnableFlagsZ : 1;
-	uint8_t m_WriteEnableFlagsS : 1;
+			// Flags
+			uint64_t m_FlagsCSrc : 2;
+			uint64_t m_FlagsPSrc : 1;
+			uint64_t m_FlagsACSrc : 1;
+			uint64_t m_FlagsZSrc : 1;
+			uint64_t m_FlagsSSrc : 1;
+			uint64_t m_WriteEnableFlagsC : 1;
+			uint64_t m_WriteEnableFlagsP : 1;
+			uint64_t m_WriteEnableFlagsAC : 1;
+			uint64_t m_WriteEnableFlagsZ : 1;
+			uint64_t m_WriteEnableFlagsS : 1;
 
-	// Register file
-	uint8_t m_RFSrcReg : 4;
-	uint8_t m_RFDstReg : 4;
-	uint8_t m_RFSrcRegPair : 3;
-	uint8_t m_RFDstRegPair : 3;
-	uint8_t m_RFRegPairOp : 2;
-	uint8_t m_RFSwapHLDE : 1;
-	uint8_t m_WriteEnableRFReg : 1;
-	uint8_t m_WriteEnableRFRegPair : 1;
+			// Register file
+			uint64_t m_RFSrcReg : 4;
+			uint64_t m_RFDstReg : 4;
+			uint64_t m_RFSrcRegPair : 3;
+			uint64_t m_RFDstRegPair : 3;
+			uint64_t m_RFRegPairOp : 2;
+			uint64_t m_RFSwapHLDE : 1;
+			uint64_t m_WriteEnableRFReg : 1;
+			uint64_t m_WriteEnableRFRegPair : 1;
 
-	// Misc states
-	uint8_t m_HLTA : 1;
-	uint8_t m_WriteEnableHLTA : 1;
-	uint8_t m_INTE : 1;
-	uint8_t m_WriteEnableINTE : 1;
-	uint8_t m_WriteEnableDataOut : 1;
-	uint8_t m_InternalDataBusSrc : 3;
+			// Misc states
+			uint64_t m_HLTA : 1;
+			uint64_t m_WriteEnableHLTA : 1;
+			uint64_t m_INTE : 1;
+			uint64_t m_WriteEnableINTE : 1;
+			uint64_t m_WriteEnableDataOut : 1;
+			uint64_t m_InternalDataBusSrc : 3;
+		};
+
+		uint64_t m_MicroInstructionBitfield;
+	};
 };
+#pragma pack(pop)
 
 struct DecodeROM
 {

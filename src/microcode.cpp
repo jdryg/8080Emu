@@ -272,6 +272,7 @@
 void romInit(DecodeROM* rom)
 {
 	memset(rom->m_AddressROM, 0, sizeof(uint16_t) * 256);
+	memset(rom->m_States, 0, sizeof(MicroInstruction) * 2048);
 	rom->m_NumStates = 0;
 }
 
@@ -1544,7 +1545,7 @@ void insertALUOp_reg(DecodeROM* rom, uint32_t reg, ALUOp::Enum op, bool withCarr
 		.nextState()
 			.state_T2()
 			.alu(ALUASrc::ACT, ALUBSrc::TMP, withCarry ? ALUCSrc::Flags : ALUCSrc::Zero, op)
-			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true) // TODO: Select which flags will be overwritten
+			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true)
 			.internalRegisters(ACCSrc::InternalDataBus, weACC, ACTSrc::ACC, false, false) // ACC = IDB
 			.registerFile_addrPC() // PC = PC + 1
 			.misc(InternalDataBusSrc::ALU, 0, false, 0, false, false) // IDB = ALU
@@ -1626,7 +1627,7 @@ void insertALUOp_mem(DecodeROM* rom, ALUOp::Enum op, bool withCarry, bool weACC)
 		.nextState()
 			.state_T2()
 			.alu(ALUASrc::ACT, ALUBSrc::TMP, withCarry ? ALUCSrc::Flags : ALUCSrc::Zero, op)
-			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true) // TODO: Select which flags will be overwritten
+			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true)
 			.internalRegisters(ACCSrc::InternalDataBus, weACC, ACTSrc::ACC, false, false) // ACC = IDB
 			.registerFile_addrPC() // PC = PC + 1
 			.misc(InternalDataBusSrc::ALU, 0, false, 0, false, false) // IDB = ALU
@@ -2058,7 +2059,7 @@ void insertALUOp_imm(DecodeROM* rom, ALUOp::Enum op, bool withCarry, bool weACC)
 		.nextState()
 			.state_T2()
 			.alu(ALUASrc::ACT, ALUBSrc::TMP, withCarry ? ALUCSrc::Flags : ALUCSrc::Zero, op)
-			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true) // TODO: Select which flags will be overwritten
+			.flags(FlagsCSrc::ALU, FlagsPSrc::ALU, FlagsACSrc::ALU, FlagsZSrc::ALU, FlagsSSrc::ALU, true, true, true, true, true)
 			.internalRegisters(ACCSrc::InternalDataBus, weACC, ACTSrc::ACC, false, false) // ACC = IDB
 			.registerFile_addrPC() // PC = PC + 1
 			.misc(InternalDataBusSrc::ALU, 0, false, 0, false, false) // IDB = ALU

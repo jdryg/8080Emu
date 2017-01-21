@@ -15,6 +15,7 @@
 #define REAL_CLOCK 0
 
 uint8_t* loadBinaryFile(const char* filename, uint32_t& fileSize);
+bool saveDecodeROMs(const DecodeROM* rom);
 
 int main()
 {
@@ -24,6 +25,8 @@ int main()
 		printf("(x) Failed to initialize CPU\n");
 		return -1;
 	}
+
+	saveDecodeROMs(cpu.getDecodeROM());
 
 	printf("Allocating 64k RAM...\n");
 	uint8_t* ram = (uint8_t*)malloc(65536);
@@ -205,4 +208,78 @@ uint8_t* loadBinaryFile(const char* filename, uint32_t& fileSize)
 	fclose(f);
 
 	return buffer;
+}
+
+uint16_t uint16_to_big_endian(uint16_t v)
+{
+	uint16_t b0 = (v & 0x00FF) >> 0;
+	uint16_t b1 = (v & 0xFF00) >> 8;
+
+	return b1 | (b0 << 8);
+}
+
+uint64_t uint64_to_big_endian(uint64_t v)
+{
+	uint64_t b0 = (v & 0x00000000000000FF) >> 0;
+	uint64_t b1 = (v & 0x000000000000FF00) >> 8;
+	uint64_t b2 = (v & 0x0000000000FF0000) >> 16;
+	uint64_t b3 = (v & 0x00000000FF000000) >> 24;
+	uint64_t b4 = (v & 0x000000FF00000000) >> 32;
+	uint64_t b5 = (v & 0x0000FF0000000000) >> 40;
+	uint64_t b6 = (v & 0x00FF000000000000) >> 48;
+	uint64_t b7 = (v & 0xFF00000000000000) >> 56;
+
+	return b7 | (b6 << 8) | (b5 << 16) | (b4 << 24) | (b3 << 32) | (b2 << 40) | (b1 << 48) | (b0 << 56);
+}
+
+bool saveDecodeROMs(const DecodeROM* rom)
+{
+	// Instruction offset ROM
+	{
+		FILE* f = fopen("i8080_instruction_offset.rom", "wb");
+		if (!f) {
+			return false;
+		}
+
+		for (uint32_t i = 0; i < 256; ++i) {
+			uint16_t addr = uint16_to_big_endian(rom->m_AddressROM[i]);
+			fwrite(&addr, sizeof(uint16_t), 1, f);
+		}
+
+		fclose(f);
+	}
+
+	// Flow control ROM
+	{
+		FILE* f = fopen("i8080_flow_control.rom", "wb");
+		if (!f) {
+			return false;
+		}
+
+		for (uint32_t i = 0; i < 2048; ++i) {
+			const MicroInstruction* ui = &rom->m_States[i];
+			uint16_t flow = uint16_to_big_endian(ui->m_FlowControlBitfield);
+			fwrite(&flow, sizeof(uint16_t), 1, f);
+		}
+
+		fclose(f);
+	}
+
+	// Microinstruction ROM
+	{
+		FILE* f = fopen("i8080_microinstructions.rom", "wb");
+		if (!f) {
+			return false;
+		}
+
+		for (uint32_t i = 0; i < 2048; ++i) {
+			const MicroInstruction* ui = &rom->m_States[i];
+			uint64_t op = uint64_to_big_endian(ui->m_MicroInstructionBitfield);
+			fwrite(&op, sizeof(uint64_t), 1, f);
+		}
+
+		fclose(f);
+	}
+
+	return true;
 }

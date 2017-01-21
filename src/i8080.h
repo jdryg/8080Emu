@@ -80,6 +80,11 @@ struct i8080
 		m_PrevPhi2 = iPhi2;
 	}
 
+	const DecodeROM* getDecodeROM() const
+	{
+		return &m_DecodeROM;
+	}
+
 #if EXERCISER
 	void setPC(uint16_t addr)
 	{

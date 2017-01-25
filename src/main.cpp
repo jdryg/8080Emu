@@ -234,6 +234,9 @@ uint64_t uint64_to_big_endian(uint64_t v)
 
 bool saveDecodeROMs(const DecodeROM* rom)
 {
+	printf("IntAck addr: %04X\n", rom->m_InterruptSequenceAddr);
+	printf("IntHaltAck addr: %04X\n", rom->m_InterruptHaltSequenceAddr);
+
 	// Instruction offset ROM
 	{
 		FILE* f = fopen("i8080_instruction_offset.rom", "wb");

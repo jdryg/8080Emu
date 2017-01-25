@@ -460,6 +460,8 @@ struct DecodeROM
 	MicroInstruction m_States[2048];
 	uint16_t m_AddressROM[256];
 	uint32_t m_NumStates;
+	uint16_t m_InterruptSequenceAddr;
+	uint16_t m_InterruptHaltSequenceAddr;
 	uint8_t m_CurOpCode;
 };
 

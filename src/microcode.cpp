@@ -274,6 +274,8 @@ void romInit(DecodeROM* rom)
 	memset(rom->m_AddressROM, 0, sizeof(uint16_t) * 256);
 	memset(rom->m_States, 0, sizeof(MicroInstruction) * 2048);
 	rom->m_NumStates = 0;
+	rom->m_InterruptSequenceAddr = 0;
+	rom->m_InterruptHaltSequenceAddr = 0;
 }
 
 void romNewInstruction(DecodeROM* rom, uint32_t opcode)
@@ -4908,10 +4910,55 @@ void insertResetSequence(DecodeROM* rom)
 	ib.end();
 }
 
+void insertInterruptSequence(DecodeROM* rom, MachineCycleType::Enum mcType)
+{
+	assert(mcType == MachineCycleType::InterruptAck || mcType == MachineCycleType::InterruptAckWhileHalt);
+
+	InstructionBuilder ib(1, romAllocStates(rom, 3), 3);
+	ib.nextCycle(mcType, 3, false)
+		// Fetch next instruction from the peripheral (usually an RST n)
+		.nextState()
+			.state_T1()
+			.alu_disabled()
+			.flags_none()
+			.internalRegisters_disabled()
+			.registerFile(RegisterFileSrcReg::B, RegisterFileDstReg::B, RegisterFileSrcRegPair::PC, RegisterFileDstRegPair::PC, RegisterFileRegPairOp::Zero, false, false, false)
+			.misc_StatusWordOut()
+			.flow_continue()
+		.end()
+		.nextState()
+			.state_T2()
+			.alu_disabled()
+			.flags_none()
+			.internalRegisters_disabled()
+			.registerFile(RegisterFileSrcReg::B, RegisterFileDstReg::B, RegisterFileSrcRegPair::PC, RegisterFileDstRegPair::PC, RegisterFileRegPairOp::Zero, false, false, false)
+			.misc_DataIn()
+			.flow_continue()
+		.end()
+		.nextState()
+			.state_T3(false)
+			.alu_disabled()
+			.flags_none()
+			.internalRegisters_disabled()
+			.registerFile_disabled()
+			.misc_DataIn()
+			.flow_continue()
+		.end()
+	.end();
+
+	ib.end();
+}
+
 void buildDecodeROM(DecodeROM* rom)
 {
 	romInit(rom);
 	insertResetSequence(rom);
+
+	rom->m_InterruptSequenceAddr = rom->m_NumStates;
+	insertInterruptSequence(rom, MachineCycleType::InterruptAck);
+
+	rom->m_InterruptHaltSequenceAddr = rom->m_NumStates;
+	insertInterruptSequence(rom, MachineCycleType::InterruptAckWhileHalt);
 
 	// Loop over all possible instructions...
 	for (uint32_t instr = 0; instr < 256; ++instr) {

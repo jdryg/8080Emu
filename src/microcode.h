@@ -317,6 +317,16 @@ struct RegisterFileDstRegPair
 
 		return WZ; // Unreachable code
 	}
+
+	static bool pairIncludesReg(Enum rp, RegisterFileDstReg::Enum reg)
+	{
+		return (rp == BC && (reg == RegisterFileDstReg::B || reg == RegisterFileDstReg::C)) ||
+			(rp == DE && (reg == RegisterFileDstReg::D || reg == RegisterFileDstReg::E)) ||
+			(rp == HL && (reg == RegisterFileDstReg::H || reg == RegisterFileDstReg::L)) ||
+			(rp == WZ && (reg == RegisterFileDstReg::W || reg == RegisterFileDstReg::Z || reg == RegisterFileDstReg::W_and_Z)) ||
+			(rp == SP && (reg == RegisterFileDstReg::SPH || reg == RegisterFileDstReg::SPL)) ||
+			(rp == PC && (reg == RegisterFileDstReg::PCH || reg == RegisterFileDstReg::PCL));
+	} 
 };
 
 struct RegisterFileRegPairOp

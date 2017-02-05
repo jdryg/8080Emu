@@ -143,6 +143,7 @@ struct InternalDataBusSrc
 		RegisterFile = 4,
 		DataIn = 5,
 		StatusWord = 6,
+		ResetAddress = 7 // IR & 0x38 (Used by RST instruction only)
 	};
 };
 

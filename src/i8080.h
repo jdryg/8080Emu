@@ -778,6 +778,8 @@ uint8_t i8080::getInternalDataBusValue()
 		return iDin;
 	case InternalDataBusSrc::StatusWord:
 		return g_StatusWords[m_uInstr->m_MachineCycleType];
+	case InternalDataBusSrc::ResetAddress:
+		return m_IR & 0x38;
 	}
 
 	// Shouldn't land here.

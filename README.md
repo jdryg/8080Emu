@@ -6,7 +6,7 @@ The rest of the tests produce the correct CRC32 values.
 
 **WARNING**: This is not an ISA level emulator! As a result, it's really slow! You've been warned :)
 
-The microcoded ROM will be used in [DLS](https://makingartstudios.itch.io/dls) to implement the instruction decoder/sequencer (if I find some time to actually finish it).
+The microcoded ROM is used in an [i8080 circuit](https://github.com/jdryg/dls-schematics/tree/master/i8080) built in [DLS](https://makingartstudios.itch.io/dls) to implement the instruction decoder/sequencer.
 
 ### Output
 ![8080 Exerciser output](https://cdn.rawgit.com/jdryg/8080Emu/master/img/8080_exerciser_output.png)
